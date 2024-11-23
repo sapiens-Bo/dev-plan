@@ -1,13 +1,13 @@
 package desk
 
 type Desk struct {
-	ID      int
-	Name    string
-	TasksID []int
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
-func (d *Desk) New(name string) *Desk {
+func New(id int64, name string) *Desk {
 	return &Desk{
+		ID:   id,
 		Name: name,
 	}
 }

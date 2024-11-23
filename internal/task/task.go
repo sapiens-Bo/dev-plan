@@ -1,22 +1,21 @@
 package task
 
 type Task struct {
-	ID          int
-	Name        string
-	IsExcept    bool
-	Description string
-	UnderTasks  []int
+	ID           int64  `json:"id"`
+	DeskID       int64  `json:"task_id"`
+	Complited    bool   `json:"complited"`
+	Description  string `json:"description"`
+	ParentTaskID *int64 `json:"parent_task_id,omitempty"`
 }
 
-func New(name string, description string) *Task {
+func New(description string) *Task {
 	return &Task{
-		Name:        name,
 		Description: description,
 	}
 }
 
 func (t *Task) Except() {
-	t.IsExcept = true
+	t.Complited = true
 }
 
 func (t *Task) Edit(description string) {
