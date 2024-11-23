@@ -72,7 +72,7 @@ func (s *Storage) CreateDesk(name string) (*desk.Desk, error) {
 func (s *Storage) CreateTask(deskID int64, description string, parentTask *int64) (*task.Task, error) {
 	const op = "storage.sqlite.CreateTask"
 	var parentVal interface{} = nil
-	if parentVal != nil {
+	if parentTask != nil {
 		parentVal = parentTask
 	}
 
@@ -96,4 +96,45 @@ func (s *Storage) CreateTask(deskID int64, description string, parentTask *int64
 	}
 
 	return task.New(lastID, deskID, parentTask, description), nil
+}
+
+func (s *Storage) GetTasksByDeskID(deskID int64) ([]*task.Task, error) {
+	const op = "storage.sqlite.GetTasksByDeskID"
+	rows, err := s.db.Query(`
+    SELECT id, desk_id, parent_task_id, description, complited
+    FROM tasks WHERE desk_id = ?
+    ORDER BY id ASC `, deskID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var tasks []*task.Task
+	for rows.Next() {
+		task := &task.Task{}
+		var parentTask sql.NullInt64
+		if err := rows.Scan(
+			&task.ID,
+			&task.DeskID,
+			&parentTask,
+			&task.Description,
+			&task.Complited,
+		); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		if parentTask.Valid {
+			task.ParentTaskID = &parentTask.Int64
+		} else {
+			task.ParentTaskID = nil
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return tasks, nil
 }
