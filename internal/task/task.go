@@ -8,13 +8,17 @@ type Task struct {
 	ParentTaskID *int64 `json:"parent_task_id,omitempty"`
 }
 
-func New(description string) *Task {
+func New(id int64, deskID int64, parentTask *int64, description string) *Task {
 	return &Task{
-		Description: description,
+		ID:           id,
+		DeskID:       deskID,
+		ParentTaskID: parentTask,
+		Description:  description,
+		Complited:    false,
 	}
 }
 
-func (t *Task) Except() {
+func (t *Task) Done() {
 	t.Complited = true
 }
 

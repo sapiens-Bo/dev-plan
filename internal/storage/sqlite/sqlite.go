@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sapiens-Bo/dev-plan/internal/desk"
+	"github.com/sapiens-Bo/dev-plan/internal/task"
 )
 
 type Storage struct {
@@ -66,4 +67,33 @@ func (s *Storage) CreateDesk(name string) (*desk.Desk, error) {
 	desk := desk.New(lastID, name)
 
 	return desk, nil
+}
+
+func (s *Storage) CreateTask(deskID int64, description string, parentTask *int64) (*task.Task, error) {
+	const op = "storage.sqlite.CreateTask"
+	var parentVal interface{} = nil
+	if parentVal != nil {
+		parentVal = parentTask
+	}
+
+	stmt, err := s.db.Prepare(`
+    INSERT INTO tasks(deskID, parent_task_id, description, complited)
+    VALUES(?, ?, ?, false)
+  `)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(deskID, parentVal, description)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return task.New(lastID, deskID, parentTask, description), nil
 }
